@@ -4,29 +4,29 @@ DECLARE @message VARCHAR(255), @id_protocolo INT, @protocolo_formatado VARCHAR(2
 DECLARE @seq_atividade TABLE (id int);
 DECLARE @seq_atributoandamento TABLE ( id int);
 
-SET @orgao_responsavel = 'MCOM' -- SIGLA DO ORG√O ONDE O SCRIPT DE BLOQUEIO SER¡ EXECUTADO
-SET @id_unidade_andamento = 313 -- ID DA UNIDADE RESPONS¡VEL PELA INSER«√O DO ANDAMENTO NOS PROCESSOS
-SET @id_usuario_sistema = 1 -- ID DO USU¡RIO INTERNO DO SEI
+SET @orgao_responsavel = 'MCOM' -- SIGLA DO ORG√ÉO ONDE O SCRIPT DE BLOQUEIO SER√Å EXECUTADO
+SET @id_unidade_andamento = 313 -- ID DA UNIDADE RESPONS√ÅVEL PELA INSER√á√ÉO DO ANDAMENTO NOS PROCESSOS
+SET @id_usuario_sistema = 1 -- ID DO USU√ÅRIO INTERNO DO SEI
 
-SET @valor_andamento = 'Processo bloqueado devido a mudanÁa de custÛdia.'
+SET @valor_andamento = 'Processo bloqueado devido a mudan√ßa de cust√≥dia.'
 
 DECLARE db_cursor CURSOR FOR   
 
 SELECT
 	DISTINCT
 	protocolo.id_protocolo,
-	protocolo.protocolo_formatado,
-	case
-		when prot_ambos_orgaos.id_protocolo is not null and prot_aberto_mcom.situacao = 'aberto' and prot_aberto_mcti.situacao = 'fechado' then 'MCOM'
-		when prot_ambos_orgaos.id_protocolo is not null and prot_aberto_mcom.situacao = 'fechado' and prot_aberto_mcti.situacao = 'aberto' then 'MCTI'
-		else COALESCE(prot_ambos_orgaos.responsavel_processo, prot_aberto_mcom.responsavel_processo, prot_aberto_mcti.responsavel_processo) 
-	end as 'responsavel'
+	protocolo.protocolo_formatado
+	--case
+	--	when prot_ambos_orgaos.id_protocolo is not null and prot_aberto_mcom.situacao = 'aberto' and prot_aberto_mcti.situacao = 'fechado' then 'MCOM'
+	--	when prot_ambos_orgaos.id_protocolo is not null and prot_aberto_mcom.situacao = 'fechado' and prot_aberto_mcti.situacao = 'aberto' then 'MCTI'
+	--	else COALESCE(prot_ambos_orgaos.responsavel_processo, prot_aberto_mcom.responsavel_processo, prot_aberto_mcti.responsavel_processo) 
+	--end as 'responsavel'
 FROM 
 	protocolo
 		join procedimento on protocolo.id_protocolo = procedimento.id_procedimento
 		join tipo_procedimento on procedimento.id_tipo_procedimento = tipo_procedimento.id_tipo_procedimento
         
--- GRUPO DE PROCESSOS ABERTOS EM AMBOS OS ”RG√OS ------------------------------------------------------------------------------------------------
+-- GRUPO DE PROCESSOS ABERTOS EM AMBOS OS √ìRG√ÉOS ------------------------------------------------------------------------------------------------
         LEFT JOIN (
 select 
   temp.id_protocolo, 
@@ -63,14 +63,14 @@ from
 			select ativ2.id_atividade, ativ2.id_protocolo, ativ2.id_unidade, ativ2.dth_conclusao, 'fechado' as situacao
 			from atividade ativ2 join protocolo prot2 on ativ2.id_protocolo = prot2.id_protocolo
 			where (
-					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√O NA UNIDADE*/ OR
-                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√O PELO USU¿RIO*/
+					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√ÉO NA UNIDADE*/ OR
+                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√ÉO PELO USU√ÄRIO*/
 				   ) and exists (
 					select ativ3.id_protocolo, max(ativ3.id_unidade), max(ativ3.id_atividade) as 'ultima_atividade_conclusao'
 					from atividade ativ3 join protocolo prot3 on ativ3.id_protocolo = prot3.id_protocolo
 					where (
-							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√O NA UNIDADE */ OR
-							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√O PELO USU¿RIO */ OR
+							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√ÉO NA UNIDADE */ OR
+							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√ÉO PELO USU√ÄRIO */ OR
                             (ativ3.dth_conclusao is null) /* PROCESSOS ABERTOS NA UNIDADE */
 						) 
                         and ativ3.id_protocolo = ativ2.id_protocolo 
@@ -115,14 +115,14 @@ from
 			select ativ2.id_atividade, ativ2.id_protocolo, ativ2.id_unidade, ativ2.dth_conclusao, 'fechado' as situacao
 			from atividade ativ2 join protocolo prot2 on ativ2.id_protocolo = prot2.id_protocolo
 			where (
-					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√O NA UNIDADE*/ OR
-                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√O PELO USU¿RIO*/
+					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√ÉO NA UNIDADE*/ OR
+                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√ÉO PELO USU√ÄRIO*/
 				   ) and exists (
 					select ativ3.id_protocolo, max(ativ3.id_unidade), max(ativ3.id_atividade) as 'ultima_atividade_conclusao'
 					from atividade ativ3 join protocolo prot3 on ativ3.id_protocolo = prot3.id_protocolo
 					where (
-							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√O NA UNIDADE */ OR
-							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√O PELO USU¿RIO */ OR
+							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√ÉO NA UNIDADE */ OR
+							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√ÉO PELO USU√ÄRIO */ OR
                             (ativ3.dth_conclusao is null) /* PROCESSOS ABERTOS NA UNIDADE */
 						) 
                         and ativ3.id_protocolo = ativ2.id_protocolo 
@@ -143,7 +143,7 @@ where
 
 		) prot_ambos_orgaos ON protocolo.id_protocolo = prot_ambos_orgaos.id_protocolo
 
---         -- GRUPO DE PROCESSOS COM ⁄LTIMO ANDAMENTO REGISTRADO NO MCOM
+--         -- GRUPO DE PROCESSOS COM √öLTIMO ANDAMENTO REGISTRADO NO MCOM
         LEFT JOIN (
 
 
@@ -170,14 +170,14 @@ from
 			select ativ2.id_atividade, ativ2.id_protocolo, ativ2.id_unidade, ativ2.dth_conclusao, 'fechado' as situacao
 			from atividade ativ2 join protocolo prot2 on ativ2.id_protocolo = prot2.id_protocolo
 			where (
-					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√O NA UNIDADE*/ OR
-                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√O PELO USU¿RIO*/
+					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√ÉO NA UNIDADE*/ OR
+                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√ÉO PELO USU√ÄRIO*/
 				   ) and exists (
 					select ativ3.id_protocolo, max(ativ3.id_unidade), max(ativ3.id_atividade) as 'ultima_atividade_conclusao'
 					from atividade ativ3 join protocolo prot3 on ativ3.id_protocolo = prot3.id_protocolo
 					where (
-							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√O NA UNIDADE */ OR
-							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√O PELO USU¿RIO */ OR
+							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√ÉO NA UNIDADE */ OR
+							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√ÉO PELO USU√ÄRIO */ OR
                             (ativ3.dth_conclusao is null) /* PROCESSOS ABERTOS NA UNIDADE */
 						) 
                         and ativ3.id_protocolo = ativ2.id_protocolo 
@@ -196,7 +196,7 @@ where
 
         ) AS prot_aberto_mcom ON protocolo.id_protocolo = prot_aberto_mcom.id_protocolo
 
-        -- GRUPO DE PROCESSOS COM ⁄LTIMO ANDAMENTO REGISTRADO NO MCTI
+        -- GRUPO DE PROCESSOS COM √öLTIMO ANDAMENTO REGISTRADO NO MCTI
         LEFT JOIN (
 
 select 
@@ -221,14 +221,14 @@ from
 			select ativ2.id_atividade, ativ2.id_protocolo, ativ2.id_unidade, ativ2.dth_conclusao, 'fechado' as situacao
 			from atividade ativ2 join protocolo prot2 on ativ2.id_protocolo = prot2.id_protocolo
 			where (
-					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√O NA UNIDADE*/ OR
-                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√O PELO USU¿RIO*/
+					(ativ2.id_tarefa = 28 and prot2.sta_nivel_acesso_global <> '2') /*CONCLUS√ÉO NA UNIDADE*/ OR
+                    (ativ2.id_tarefa = 63 and prot2.sta_nivel_acesso_global = '2') /*CONCLUS√ÉO PELO USU√ÄRIO*/
 				   ) and exists (
 					select ativ3.id_protocolo, max(ativ3.id_unidade), max(ativ3.id_atividade) as 'ultima_atividade_conclusao'
 					from atividade ativ3 join protocolo prot3 on ativ3.id_protocolo = prot3.id_protocolo
 					where (
-							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√O NA UNIDADE */ OR
-							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√O PELO USU¿RIO */ OR
+							(ativ3.id_tarefa = 28 and prot3.sta_nivel_acesso_global <> '2') /* CONCLUS√ÉO NA UNIDADE */ OR
+							(ativ3.id_tarefa = 63 and prot3.sta_nivel_acesso_global = '2')  /* CONCLUS√ÉO PELO USU√ÄRIO */ OR
                             (ativ3.dth_conclusao is null) /* PROCESSOS ABERTOS NA UNIDADE */
 						) 
                         and ativ3.id_protocolo = ativ2.id_protocolo 
@@ -266,7 +266,7 @@ BEGIN
     BEGIN TRANSACTION
 
 	PRINT ' '  
-    SELECT @message = '- Iniciando o bloqueio do Processo n∫: ' + @protocolo_formatado + ' (' + CAST(@id_protocolo as varchar) + ')'
+    SELECT @message = '- Iniciando o bloqueio do Processo n¬∫: ' + @protocolo_formatado + ' (' + CAST(@id_protocolo as varchar) + ')'
     PRINT @message  
 
     SELECT @message = '--- BLOQUEANDO O PROCESSO NA TABELA DE PROTOCOLO'

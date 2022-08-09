@@ -1,7 +1,87 @@
---DECLARE @orgao_responsavel varchar;
+-- Dropando a tabela temporária, caso ela exista.
+DROP TABLE IF EXISTS #atividade_ultimo_tramite;
 
---SET @orgao_responsavel = 'MCOM' -- SIGLA DO ORGÃO ONDE O SCRIPT DE BLOQUEIO SERÁ EXECUTADO
+-- Criando a tabela temporária, caso ela ainda não exista.
+CREATE TABLE  #atividade_ultimo_tramite (
+    id_protocolo integer,
+    id_atividade integer,
+    id_unidade integer,
+    dth_conclusao DateTime,
+	situacao VARCHAR(50),
+	responsavel CHAR(4) -- MCOM ou MCTI,
+	PRIMARY KEY (id_protocolo, id_atividade)
+);
 
+
+-- Populando a tabela temporária com os dados dos últimos trâmites dos processos do MCOM
+INSERT INTO #atividade_ultimo_tramite
+SELECT 
+	ativ2.id_protocolo, ativ2.id_atividade, ativ2.id_unidade, ativ2.dth_conclusao, 
+	case
+		when ativ2.dth_conclusao IS NULL then 'aberto'
+		else 'fechado'
+	end as 'situacao',
+	'MCOM' as 'responsavel'
+FROM atividade as ativ2
+JOIN protocolo as prot2 ON ativ2.id_protocolo = prot2.id_protocolo
+JOIN unidade as unid2 ON unid2.id_unidade = ativ2.id_unidade
+JOIN orgao as org2 ON org2.id_orgao = unid2.id_orgao
+WHERE ativ2.id_atividade = (
+	SELECT TOP(1) 
+	ativ.id_atividade
+	FROM atividade as ativ
+	JOIN protocolo as prot ON ativ.id_protocolo = prot.id_protocolo
+	JOIN unidade as unid ON unid.id_unidade = ativ.id_unidade
+	JOIN orgao as org ON org.id_orgao = unid.id_orgao
+	WHERE prot.sta_protocolo = 'P'
+	AND (
+		ativ.dth_conclusao IS NULL OR (
+			(ativ.id_tarefa IN (28, 41) and prot.sta_nivel_acesso_global <> '2') /*CONCLUSÃO NA UNIDADE*/ OR
+			(ativ.id_tarefa = 63 and prot.sta_nivel_acesso_global = '2') /*CONCLUSÃO PELO USUÁRIO*/
+		)
+	)
+	AND org.sigla = 'MCOM'
+	AND prot2.id_protocolo = prot.id_protocolo
+	ORDER BY 
+		COALESCE(ativ.dth_conclusao, CAST('9999-12-31 23:59:59.997' AS DateTime)) DESC, 
+		ativ.dth_abertura DESC
+);
+
+-- Populando a tabela temporária com os dados dos últimos trâmites dos processos do MCTI
+INSERT INTO #atividade_ultimo_tramite
+SELECT 
+	ativ2.id_protocolo, ativ2.id_atividade, ativ2.id_unidade, ativ2.dth_conclusao, 
+	case
+		when ativ2.dth_conclusao IS NULL then 'aberto'
+		else 'fechado'
+	end as 'situacao',
+	'MCTI' as 'responsavel'
+FROM atividade as ativ2
+JOIN protocolo as prot2 ON ativ2.id_protocolo = prot2.id_protocolo
+JOIN unidade as unid2 ON unid2.id_unidade = ativ2.id_unidade
+JOIN orgao as org2 ON org2.id_orgao = unid2.id_orgao
+WHERE ativ2.id_atividade = (
+	SELECT TOP(1) 
+	ativ.id_atividade
+	FROM atividade as ativ
+	JOIN protocolo as prot ON ativ.id_protocolo = prot.id_protocolo
+	JOIN unidade as unid ON unid.id_unidade = ativ.id_unidade
+	JOIN orgao as org ON org.id_orgao = unid.id_orgao
+	WHERE prot.sta_protocolo = 'P'
+	AND (
+		ativ.dth_conclusao IS NULL OR (
+			(ativ.id_tarefa IN (28, 41) and prot.sta_nivel_acesso_global <> '2') /*CONCLUSÃO NA UNIDADE*/ OR
+			(ativ.id_tarefa = 63 and prot.sta_nivel_acesso_global = '2') /*CONCLUSÃO PELO USUÁRIO*/
+		)
+	)
+	AND org.sigla <> 'MCOM'
+	AND prot2.id_protocolo = prot.id_protocolo
+	ORDER BY 
+		COALESCE(ativ.dth_conclusao, CAST('9999-12-31 23:59:59.997' AS DateTime)) DESC, 
+		ativ.dth_abertura DESC
+);
+
+-- Obtendo a lista de processos e seu responsável
 SELECT
 	DISTINCT
 	case
@@ -275,4 +355,4 @@ WHERE
 	--AND protocolo.sta_estado IN (0, 1)
 	--AND COALESCE(prot_ambos_orgaos.responsavel_processo, prot_aberto_mcom.responsavel_processo, prot_aberto_mcti.responsavel_processo) <> @orgao_responsavel
 	--AND protocolo.protocolo_formatado = '01250.069897/2018-44'
---ORDER BY sigla_unidade_geradora, dta_inclusao 
+;

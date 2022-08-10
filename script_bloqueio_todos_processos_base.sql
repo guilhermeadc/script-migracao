@@ -92,9 +92,8 @@ WHERE ativ2.id_atividade = (
 		ativ.dth_abertura DESC
 );
 
-DECLARE db_cursor CURSOR FOR   
-
 -- OBTENDO A LISTA DE PROCESSOS A SEREM BLOQUEADOS
+DECLARE db_cursor CURSOR FOR   
 SELECT
 	DISTINCT
 	protocolo.id_protocolo,

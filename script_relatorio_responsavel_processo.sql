@@ -240,7 +240,7 @@ where
 
 WHERE 
 	protocolo.sta_protocolo = 'P'
-	--AND protocolo.sta_estado IN (0, 1)
+	AND protocolo.sta_estado IN (0, 1, 4)
 	--AND case
 	--	when prot_ambos_orgaos.id_protocolo is not null and prot_aberto_mcom.situacao = 'aberto' and prot_aberto_mcti.situacao = 'fechado' then 'MCOM'
 	--	when prot_ambos_orgaos.id_protocolo is not null and prot_aberto_mcom.situacao = 'fechado' and prot_aberto_mcti.situacao = 'aberto' then 'MCTI'
